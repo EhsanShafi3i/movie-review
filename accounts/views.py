@@ -1,8 +1,9 @@
 from django.shortcuts import render
 # from django.contrib.auth.forms import UserCreationForm
-from .forms import UserCreateForm
+from .forms import UserCreateForm,PassChangeForm
 from django.contrib.auth.models import User
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout, authenticate,update_session_auth_hash
+from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect
 from django.db import IntegrityError
@@ -42,3 +43,20 @@ def loginaccount(request):
         else:
             login(request, user)
             return redirect("home")
+
+@login_required
+def changepassword(request):
+        if request.method == 'POST':
+            form = PassChangeForm(request.user, request.POST)
+            if form.is_valid():
+                user = form.save()
+                update_session_auth_hash(request, user)  
+                messages.success(request, 'Your password was successfully updated!')
+                return redirect('change_password')
+            else:
+                messages.error(request, 'Please correct the error below.')
+        else:
+            form = PassChangeForm(request.user)
+        return render(request, 'changepassword.html', {
+            'form': form
+        })
